@@ -1,0 +1,69 @@
+<?php
+/*
+Clase para realizar operaciones en la base de datos MySQL
+*/
+class OperacionesMySql
+{
+	protected $host;
+	protected $usuario;
+	protected $clave;
+	protected $base_datos;
+
+	public function __construct()
+	{
+		$str_datos = file_get_contents("../Configuracion/base_datos.json");
+		$data_conexion=json_decode($str_datos,true);
+		$this->host=$data_conexion['Servidor'];
+		$this->usuario=$data_conexion['usuario'];
+		$this->clave=$data_conexion['clave'];
+		$this->base_datos=$data_conexion['bd'];
+	}
+	/*public function __construct($servidor,$user,$pass,$database)
+	{		
+		$this->host=$servidor;
+		$this->usuario=$user;
+		$this->clave=$pass;
+		$this->base_datos=$database;
+	}*/
+	private function conectar()
+	{
+		$conexion=new mysqli($this->host,$this->usuario,$this->clave,$this->base_datos);
+		return $conexion;
+	}
+	private function conexion_activa()
+	{
+		$conexion=$this->conectar();
+		if ($conexion->connect_errno)
+		{
+			return FALSE;
+		}
+		$conexion->close();
+		return TRUE;
+	}
+	private function informe_error()
+	{
+		$conexion=$this->conectar();
+		if ($conexion->connect_errno)
+		{
+			return $conexion->connect_error;
+		}
+		$conexion->close();
+		return "Sin Error";
+	}
+	public function ejecutar($instruccion)
+	{
+		if($this->conexion_activa())
+		{
+			$conexion=$this->conectar();
+			if($conexion->query($instruccion)===TRUE){
+				$conexion->close();
+				return TRUE;
+			}else{
+				return "Problema con la instruccion";	
+			}
+		}else{
+			return "Problema con la conexion: ".$this->informe_error();
+		}
+	}
+}
+
